@@ -70,6 +70,13 @@ std::vector<OriginDestination> importODPairsFrom(const std::string& infile) {
 	return pairs;
 }
 
+/**
+ * Given a demand vector, this function returns a vector of ClusteredOriginDestination objects
+ * 
+ * @param demand a map of the form {origin: [], destination: [], volume:[]}
+ * 
+ * @return A vector of ClusteredOriginDestination objects.
+ */
 std::vector<ClusteredOriginDestination> importODPairsFrom(std::map<std::string,std::vector<int>> demand) {
 	std::vector<ClusteredOriginDestination> pairs;
 	std::vector<int> origins=demand["origin"];

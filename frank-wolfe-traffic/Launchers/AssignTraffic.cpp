@@ -175,34 +175,25 @@ void assignTraffic(const CommandLineParser& clp) {
 		csv << "Total time:," << timer.elapsed() << std::flush; 
 }
 
-std::map<std::string,std::vector<int>> flow(std::map<std::string,std::vector<int>> demand, std::map<std::string,std::vector<int>> edges){
-	//"edge_tail", "edge_head", "length", "capacity", "speed"
+/**
+ * It takes in a map of demand, a map of edges, and a number of iterations. It then runs the assignment
+ * algorithm on the graph with the given demand and edges.
+ * 
+ * @param demand a map of origin-destination pairs of the form {origin: [], destination: [], volume:[]}
+ * @param edges a map of edges {edge_tail: [], "edge_head":[], "length":[], "capacity":[], "speed":[]}
+ * @param numIterations the number of iterations to run the algorithm for.
+ * 
+ * @return A map of the form {tail: [], head: [],flow: []}
+ */
+std::map<std::string,std::vector<int>> flow(std::map<std::string,std::vector<int>> demand, std::map<std::string,std::vector<int>> edges, int numIterations){
 	Graph graph(edges,0.0,100.0);
 	std::vector<ClusteredOriginDestination> odPairs =importODPairsFrom(demand);
-	/*
-	using ObjFunctionT =UserEquilibrium;
-	using TravelCostFunction = BprFunction;
-	using Adapter =DijkstraAdapter;
-	using Assignment = FrankWolfeAssignment<ObjFunctionT, TravelCostFunction, Adapter>;
-	*/
-	using Assignment=FrankWolfeAssignment<UserEquilibrium,BprFunction,DijkstraAdapter>;
 	bool verbose =false;
 	bool elasticRebalance=false;
 	std::ofstream stream;
 	FrankWolfeAssignment<UserEquilibrium,BprFunction,DijkstraAdapter> assign(graph,odPairs,stream,stream,stream,stream,verbose,elasticRebalance);
 
-	return assign.runPython(5);
-
-	std::map<std::string,std::vector<int>> ret;
-	if(demand.size()==0 && edges.size()==0){
-		return ret;
-	}
-	ret["volume"]=std::vector<int>(10,10);
-	return ret;
-	//Graph graph(infilename, ceParameter, constParameter); this is in  "DataStructures/Graph/Graph.h"
-	//std::vector<ClusteredOriginDestination> odPairs = importClusteredODPairsFrom(odFilename); //this is in DataStructures/Utilities/OriginDestination.h
-	//FrankWolfeAssignmentT assign(graph, odPairs, csv, patternFile, pathFile, weightFile, clp.isSet("v"), clp.isSet("elastic")); //Algorithms/TrafficAssignment/FrankWolfeAssignment.h"
-	//assign.run(numIterations); //and this just needs to return the flows not write them
+	return assign.runPython(numIterations);
 }
 
 int add(int i, int j) {

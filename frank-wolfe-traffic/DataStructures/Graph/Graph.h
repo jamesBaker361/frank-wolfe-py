@@ -22,9 +22,15 @@ public:
 		readFrom(filename);
 	}
 
+/**
+ * Given a map of edges, the function creates a graph with the number of vertices equal to the maximum
+ * vertex number in the map
+ * 
+ * @param edges a map of {edge_tail: [], edge_head: [], length: [], capacity:[], speed:[]}
+ * @param ceParameter combined equilibrium parameter
+ * @param constParameter
+ */
 	Graph(std::map<std::string,std::vector<int>> edges,const double ceParameter, const double constParameter) : vertexNum(0), ceParameter(ceParameter), constParameter(constParameter){
-		//pybind constructor, should take 5 arrays representing tail, head, length, capacity, speed and also the other parameters
-		//"edge_tail", "edge_head", "length", "capacity", "speed"
 		vertexNum = 0;
 		edgeTail=edges["edge_tail"];
 		edgeHead=edges["edge_head"];
