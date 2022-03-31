@@ -21,7 +21,20 @@ RUN apt-get -o Acquire::Check-Valid-Until=false -o Acquire::Check-Date=false upd
 	python3-pip \
     python3-dev 
 
-RUN python3 -m pip install numpy scipy networkx OpenMatrix pandas networkx pytest pybind11 stable-baselines3 tf-agents[reverb] tensorforce gym
+RUN python3 -m pip install numpy \
+	scipy \
+	networkx \
+	OpenMatrix \
+	pandas \
+	networkx \
+	pytest \
+	pybind11 \
+	stable-baselines3 \
+	tf-agents[reverb] \
+	tensorforce \
+	gym==0.22.0 \
+	tune \
+	ray[rllib]
 
 
 SHELL ["/bin/bash", "-c"]
@@ -49,13 +62,11 @@ RUN cd vectorclass && mkdir /usr/local/include/vectorclass && cp *.h special/* $
 
 WORKDIR ..
 
-#RUN scons
+RUN scons
 #RUN scons -Q variant=Release
 #RUN scons -Q variant=Debug
 
-RUN ls
-
-RUN g++ -o frankwolfe$(python3-config --extension-suffix) -std=c++14 -fopenmp -Werror -Wfatal-errors -Wpedantic -pedantic-errors -Wall -Wextra -Wno-missing-braces -Wno-unknown-pragmas -Wno-strict-overflow -Wno-sign-compare -O3 -shared -msse4 -fopenmp -DCSV_IO_NO_THREAD -fPIC $(python3 -m pybind11 --includes) $(python3-config --ldflags) -I. Launchers/AssignTraffic.cpp
+RUN g++ -o frankwolfe$(python3-config --extension-suffix) -std=c++14 -fopenmp -Werror -Wfatal-errors -Wpedantic -pedantic-errors -Wall -Wextra -Wno-missing-braces -Wno-unknown-pragmas -Wno-strict-overflow -Wno-sign-compare -O3 -shared -msse4 -fopenmp -DCSV_IO_NO_THREAD -fPIC $(python3 -m pybind11 --includes) $(python3-config --ldflags) -I. Launchers/AssignTrafficPython.cpp
 
 ENV PYTHONPATH=/frank-wolfe-traffic/:${PYTHONPATH}
 ENV PATH=/frank-wolfe-traffic/Build/Devel/Launchers/:${PATH}

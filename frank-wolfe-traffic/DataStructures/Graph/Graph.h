@@ -30,7 +30,8 @@ public:
  * @param ceParameter combined equilibrium parameter
  * @param constParameter
  */
-	Graph(std::map<std::string,std::vector<int>> edges,const double ceParameter, const double constParameter) : vertexNum(0), ceParameter(ceParameter), constParameter(constParameter){
+	Graph(std::map<std::string,std::vector<int>> edges,const double ceParameter, const double constParameter) : 
+	vertexNum(0), ceParameter(ceParameter), constParameter(constParameter){
 		vertexNum = 0;
 		edgeTail=edges["edge_tail"];
 		edgeHead=edges["edge_head"];
@@ -63,6 +64,14 @@ public:
 			edgeFreeTravelTime.push_back(freeFlowTravelTime);
 			edgeWeight.push_back(freeFlowTravelTime); // initial edge weight
 		}
+	}
+
+	~Graph() {
+		std::cout<< "Graph destructor called address = " <<this<<std::endl;
+	}
+
+	void updateEdges(std::vector<int> newCapacity){
+		edgeCapacity=newCapacity;
 	}
 							  
 	// Returns the number of vertices in the graph

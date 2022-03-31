@@ -28,40 +28,29 @@ template <
 class FrankWolfeAssignment {
 public:
 
+	using AllOrNothing = AllOrNothingAssignment<ShortestPathAlgoT>;
+	using ObjFunction = ObjFunctionT<TravelCostFunction>;
+
 	// Constructs an assignment procedure based on the Frank-Wolfe method.
-	FrankWolfeAssignment(Graph& graph, const std::vector<ClusteredOriginDestination>& odPairs, std::ofstream& csv, std::ofstream& patternFile, std::ofstream& pathFile, std::ofstream& weightFile, const bool verbose = true, const bool elasticRebalance = false)
+
+	FrankWolfeAssignment(Graph& graph, const std::vector<ClusteredOriginDestination>& odPairs,const bool verbose = true, const bool elasticRebalance = false)
 		: allOrNothingAssignment(graph, odPairs, verbose, elasticRebalance),
 		  graph(graph),	
 		  trafficFlows(graph.numEdges()),
 		  pointOfSight(graph.numEdges()),
 		  travelCostFunction(graph),
-		  objFunction(travelCostFunction, graph),
-		  csv(csv),
-		  patternFile(patternFile),
-		  pathFile(pathFile),
-		  weightFile(weightFile),
+		  objFunction(travelCostFunction, graph), 
 		  verbose(verbose) {
-		stats.totalRunningTime = allOrNothingAssignment.stats.totalRoutingTime;
+			  stats.totalRunningTime = allOrNothingAssignment.stats.totalRoutingTime;
+		  }
+
+	void updateEdges(std::vector<int> newCapacity){
+		graph.updateEdges(newCapacity);
 	}
-/*
-	FrankWolfeAssignment(
-		Graph& graph, 
-	const std::vector<ClusteredOriginDestination>& odPairs,
-	const bool verbose = true,
-	 const bool elasticRebalance = false)
-		: allOrNothingAssignment(graph, odPairs, verbose, elasticRebalance),
-		  graph(graph),	
-		  trafficFlows(graph.numEdges()),
-		  pointOfSight(graph.numEdges()),
-		  travelCostFunction(graph),
-		  objFunction(travelCostFunction, graph),
-		  csv(std::ofstream csv),
-		  patternFile(std::ofstream patternFile),
-		  pathFile(std::ofstream pathFile),
-		  weightFile(std::ofstream weightFile),
-		  verbose(verbose) {
-		stats.totalRunningTime = allOrNothingAssignment.stats.totalRoutingTime;
-	}*/
+
+	~FrankWolfeAssignment(){
+		std::cout<< "FrankWolfeAssignment destructor called address = " <<this<<std::endl;
+	}
 
 	// Assigns all OD-flows onto the input graph.
 
@@ -129,134 +118,6 @@ public:
 		}
 
 		return dict;
-	}
-
-	void run(const int numIterations = 1) {
-		assert(numIterations >= 0);
-		const AllOrNothingAssignmentStats& substats = allOrNothingAssignment.stats;
-
-		std::vector<double> weights = std::vector<double>(numIterations, 0.0);
-		weights[0]=1.0;
-		
-		Timer timer;
-		determineInitialSolution();
-		paths = allOrNothingAssignment.getPaths();
-
-		stats.lastRunningTime = timer.elapsed();
-		stats.lastLineSearchTime = stats.lastRunningTime - substats.lastRoutingTime;
-		stats.objFunctionValue = objFunction(trafficFlows);
-		stats.finishIteration();
-
-		if (csv.is_open()) {
-			csv << substats.numIterations << "," << substats.lastCustomizationTime << "," << substats.lastQueryTime << ",";
-			csv << stats.lastLineSearchTime << "," << stats.lastRunningTime << ",";
-			csv << stats.objFunctionValue << "," << stats.totalTravelCost << "," << std::endl;
-		}
-		
-		if (pathFile.is_open())
-			{
-				for (auto i = 0; i < paths.size(); i++)
-				{
-					pathFile << substats.numIterations << ',' << i;
-					for(const auto& e : paths[i])
-						pathFile << "," << e;
-
-					pathFile << '\n';
-				}
-			}
-		
-
-		if (verbose) {
-			std::cout << "  Line search: " << stats.lastLineSearchTime << "ms";
-			std::cout << "  Total: " << stats.lastRunningTime << "ms\n";
-			std::cout << "  Objective function value: " << stats.objFunctionValue << "\n";
-			std::cout << "  Total travel cost: " << stats.totalTravelCost << "\n";
-			std::cout << std::flush;
-		}
-
-		// Perform iterations of Frank-Wolfe		
-		do {
-			Timer timer;
-			stats.startIteration();
-
-			// Update travel costs
-			updateTravelCosts();
-
-			// Direction finding.
-			findDescentDirection();
-			paths = allOrNothingAssignment.getPaths();
-			
-			const auto tau = findMoveSize();
-			moveAlongDescentDirection(tau);
-
-			// update weights vector
-			for (auto i = 0; i < substats.numIterations - 1; i++)
-				weights[i] = weights[i] * (1.0-tau);
-
-			weights[substats.numIterations-1] = tau;
-									
-			stats.lastRunningTime = timer.elapsed();
-			stats.lastLineSearchTime = stats.lastRunningTime - substats.lastRoutingTime;
-			stats.objFunctionValue = objFunction(trafficFlows);
-			stats.finishIteration();
-
-			if (csv.is_open()) {
-				csv << substats.numIterations << "," << substats.lastCustomizationTime << "," << substats.lastQueryTime << ",";
-				csv << stats.lastLineSearchTime << "," << stats.lastRunningTime << ",";
-				csv << stats.objFunctionValue << "," << stats.totalTravelCost << "," << std::endl;
-			}	
-			
-			if (pathFile.is_open())
-			{
-				for (auto i = 0; i < paths.size(); i++)
-				{
-					pathFile << substats.numIterations << ',' << i;
-					for(const auto& e : paths[i])
-						pathFile << "," << e;
-
-					pathFile << '\n';
-				}
-			}
-			
-
-			if (verbose) {
-				std::cout << "  Line search: " << stats.lastLineSearchTime << "ms";
-				std::cout << "  Total: " << stats.lastRunningTime << "ms\n";
-				std::cout << "  Max change in OD-distances: " << substats.maxChangeInDistances << "\n";
-				std::cout << "  Avg change in OD-distances: " << substats.avgChangeInDistances << "\n";
-				std::cout << "  Objective function value: " << stats.objFunctionValue << "\n";
-				std::cout << "  Total travel cost: " << stats.totalTravelCost << "\n";
-				std::cout << std::flush;
-			}
-		} while ((numIterations > 0 || substats.avgChangeInDistances > 1e-2) &&
-				 (numIterations == 0 || substats.numIterations != numIterations));
-
-		if (verbose) {
-			std::cout << "Total:\n";
-			std::cout << "  Checksum: " << substats.totalChecksum;
-			std::cout << "  Prepro: " << substats.totalPreprocessingTime << "ms";
-			std::cout << "  Custom: " << substats.totalCustomizationTime << "ms";
-			std::cout << "  Queries: " << substats.totalQueryTime << "ms";
-			std::cout << "  Routing: " << substats.totalRoutingTime << "ms\n";
-			std::cout << "  Line search: " << stats.totalLineSearchTime << "ms";
-			std::cout << "  Total: " << stats.totalRunningTime << "ms\n";
-			std::cout << std::flush;
-		}
-
-		if (patternFile.is_open()) 
-			FORALL_EDGES(graph, e)
-			{			
-				const int tail = graph.tail(e);
-				const int head = graph.head(e);
-				const auto flow = trafficFlows[e];
-			
-				patternFile << substats.numIterations << ',' << tail << ',' << head << ',' << graph.freeTravelTime(e) << ',' << travelCostFunction(e, flow) << ',' << graph.capacity(e) << ',' << flow << '\n';
-			}
-
-		if (weightFile.is_open())
-			for (int i=0; i < numIterations; i++)
-				weightFile << i+1 << "," << weights[i] << std::endl;
-		
 	}
 
 	void determineInitialSolution() {
@@ -356,19 +217,13 @@ public:
 	FrankWolfeAssignmentStats stats; // Statistics about the execution.
 
 private:
-	using AllOrNothing = AllOrNothingAssignment<ShortestPathAlgoT>;
-	using ObjFunction = ObjFunctionT<TravelCostFunction>;
 
 	AllOrNothing allOrNothingAssignment;   // The all-or-nothing assignment algo used as a subroutine.
 	Graph& graph;               // The input graph.
 	std::vector<double> trafficFlows;    // The traffic flows on the edges.
 	std::vector<double> pointOfSight;            // The point defining the descent direction d = s - x
 	TravelCostFunction travelCostFunction; // A functor returning the travel cost on an edge.
-	ObjFunction objFunction;               // The objective function to be minimized (UE or SO).
-	std::ofstream& csv;                    // The output CSV file containing statistics.
-	std::ofstream& patternFile;            // The output file containing the flow patterns.
-	std::ofstream& pathFile;				// Output file for individual paths
-	std::ofstream& weightFile;				// Output file for path weights
+	ObjFunction objFunction;               // The objective function to be minimized (UE or SO).			// Output file for path weights
 	const bool verbose;                    // Should informative messages be displayed?
 	std::vector<std::vector<int>> paths;	// paths of the individual od pairs
 };

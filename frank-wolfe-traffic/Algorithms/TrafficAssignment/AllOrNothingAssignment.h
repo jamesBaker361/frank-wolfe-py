@@ -27,7 +27,7 @@ class AllOrNothingAssignment {
 public:
 	// Constructs an all-or-nothing assignment instance.
 	AllOrNothingAssignment(Graph& graph,
-						   const std::vector<ClusteredOriginDestination>& odPairs,
+						   const std::vector<ClusteredOriginDestination> odPairs,
 						   const bool verbose = true, const bool elasticRebalance = false)
 		: stats(odPairs.size()),
 		  shortestPathAlgo(graph),
@@ -46,21 +46,27 @@ public:
 		
 		}
 
+	~AllOrNothingAssignment() {
+		std::cout<< "AllOrNothingAssignment destructor called address = " <<this<<std::endl;
+	}
+
 	// Assigns all OD-flows to their currently shortest paths.
 	void run() {
 		Timer timer;
 		++stats.numIterations;
-		if (verbose) std::cout << "Iteration " << stats.numIterations << ": " << std::flush;
+		if (verbose) std::cout << "Iteration " << stats.numIterations << ": " << std::endl;
 
 		shortestPathAlgo.customize();
+		if (verbose) std::cout << "shortestPathAlgo.customize()" << std::endl;
 		stats.lastCustomizationTime = timer.elapsed();
-
+		if (verbose) std::cout << "stats.lastCustomizationTime = timer.elapsed();" << std::endl;
 		timer.restart();
-
+		if (verbose) std::cout << "timer.restart();" << std::endl;
 		// assign initial flow of 0 to each edge
 		trafficFlows.assign(inputGraph.numEdges(), 0);
+		if (verbose) std::cout << "trafficFlows.assign(inputGraph.numEdges(), 0);" << std::endl;
 		stats.startIteration();
-
+		if (verbose) std::cout << "stats.startIteration();" << std::endl;
 		// find shortest path between each OD pair and collect flows
 		if (elasticRebalance) // comptue for elastic AMoD
 		{
@@ -70,17 +76,6 @@ public:
 
 				A better solution would be to have four different shortest path queries to each origin-destination pair. That is, the OD-pair file would specify for each (virtual) origin-destination the id of the real od-pair, and a number in {0,..,3} specifying the type of query it represents. 
 			 */
-			/*
-			std::vector<std::string> foo;
-			std::for_each(
-				std::execution::par_unseq,
-				foo.begin(),
-				foo.end(),
-				[](auto&& item)
-				{
-					//do stuff with item
-				});
-			*/
 			for (int i = 0; i < odPairs.size(); i++)
 			{
 				std::cout << "elastic\n"<<std::flush;
@@ -105,13 +100,13 @@ public:
 				}
 			}
 			for (int i = 0; i < odPairs.size(); i++){
-				//#pragma omp parallel
-				{
-				#pragma omp for nowait
+
+				if (verbose) std::cout << "for (int i = 0; i < odPairs.size(); i++){" << std::endl;
 				for(int j=0;j<paths[i].size();j++){
 					const auto& e =paths[i][j];
+					if (verbose) std::cout << "paths[i][j];" << std::endl;
 					trafficFlows[e] += odPairs[i].volume;
-				}
+					if (verbose) std::cout << "trafficFlows[e] += odPairs[i].volume;" << std::endl;
 				}
 				
 			}
@@ -119,23 +114,27 @@ public:
 		}
 		else // compute for classic traffic assignment
 		{
+			if (verbose) std::cout << "(odPairs.size()" << odPairs.size() << std::endl;
 			//#pragma omp for
 			for (int i = 0; i < odPairs.size(); i++)
-			{
-				//int tid = omp_get_thread_num();
-				//std::cout<< "\ntid = "<<tid<<std::flush;
+			{	
+				if (verbose) std::cout << "&odPairs[i]" << &odPairs[i] << std::endl;
+				if (verbose) std::cout << "(odPairs[i].origin" << odPairs[i].origin << std::endl;
+				if (verbose) std::cout << "(odPairs[i].destination " << odPairs[i].destination << std::endl;
+				if (verbose) std::cout << "paths[i].size() " << paths[i].size() << std::endl;
 				shortestPathAlgo.run(odPairs[i].origin, odPairs[i].destination, paths[i]);
 			}
 			//#pragma omp parallel
 			//{
+			if (verbose) std::cout << "loop" << std::endl;
 			for (int i = 0; i < odPairs.size(); i++){
-				//#pragma omp parallel
-				{
-				#pragma omp for nowait
+				if (verbose) std::cout << "for (int i = 0; i < odPairs.size(); i++){" << std::endl;
 				for(int j=0;j<paths[i].size();j++){
+					if (verbose) std::cout << "for(int j=0;j<paths[i].size();j++){;" << std::endl;
 					const auto& e =paths[i][j];
+					if (verbose) std::cout << "paths[i][j];" << std::endl;
 					trafficFlows[e] += odPairs[i].volume;
-				}
+					if (verbose) std::cout << "trafficFlows[e] += odPairs[i].volume;" << std::endl;
 				}
 				
 			}

@@ -26,11 +26,20 @@ struct OriginDestination {
 
 // An origin-destination (OD) pair that additionally stores an origin zone and a destination zone.
 // Zones or traffic cells represent for example residential or commercial areas.
-struct ClusteredOriginDestination : public OriginDestination {
+class ClusteredOriginDestination {
 	// Constructs a clustered OD-pair from o to d.
+	public:
 	ClusteredOriginDestination(const int o, const int d, const int r, const int e1, const int e2, const int v)
-		: OriginDestination(o, d, v), rebalancer(r), edge1(e1), edge2(e2) {}
+		: origin(o), destination(d), volume(v), rebalancer(r), edge1(e1), edge2(e2) {}
 
+	ClusteredOriginDestination(const ClusteredOriginDestination &old){
+		origin=old.origin;
+		destination=old.destination;
+		volume=old.volume;
+		rebalancer=old.rebalancer;
+		edge1=old.edge1;
+		edge2=old.edge2;
+	}
 	// Compares this clustered OD-pair with rhs lexicographically.
 	bool operator<(const ClusteredOriginDestination& rhs) const {
 		if (edge1 < rhs.edge1)
@@ -45,30 +54,15 @@ struct ClusteredOriginDestination : public OriginDestination {
 			return true;
 		if (rebalancer  > rhs.rebalancer)
 			return false;
-		return OriginDestination::operator<(rhs);
+		return origin < rhs.origin || (origin == rhs.origin && destination < rhs.destination);
 	}
-	
-	int rebalancer, edge1, edge2;
+		int origin;
+		int destination;
+		int volume; 
+		int rebalancer;
+		int edge1;
+		int edge2;
 };
-
-// Reads the specified file into a vector of OD-pairs.
-std::vector<OriginDestination> importODPairsFrom(const std::string& infile) {
-	std::vector<OriginDestination> pairs;
-	int origin, destination, volume;
-	using TrimPolicy = io::trim_chars<>;
-	using QuotePolicy = io::no_quote_escape<','>;
-	using OverflowPolicy = io::throw_on_overflow;
-	using CommentPolicy = io::single_line_comment<'#'>;
-	io::CSVReader<3, TrimPolicy, QuotePolicy, OverflowPolicy, CommentPolicy> in(infile);
-	in.read_header(io::ignore_extra_column, "origin", "destination", "volume");
-	while (in.read_row(origin, destination, volume)) {
-		assert(origin >= 0);
-		assert(destination >= 0);
-		assert(volume >= 0);
-		pairs.emplace_back(origin, destination, volume);
-	}
-	return pairs;
-}
 
 /**
  * Given a demand vector, this function returns a vector of ClusteredOriginDestination objects
@@ -77,7 +71,7 @@ std::vector<OriginDestination> importODPairsFrom(const std::string& infile) {
  * 
  * @return A vector of ClusteredOriginDestination objects.
  */
-std::vector<ClusteredOriginDestination> importODPairsFrom(std::map<std::string,std::vector<int>> demand) {
+std::vector<ClusteredOriginDestination> & importODPairsFrom(std::map<std::string,std::vector<int>> demand) {
 	std::vector<ClusteredOriginDestination> pairs;
 	std::vector<int> origins=demand["origin"];
 	std::vector<int> destinations=demand["destination"];
@@ -87,6 +81,8 @@ std::vector<ClusteredOriginDestination> importODPairsFrom(std::map<std::string,s
 	assert(origins.size()==volumes.size());
 
 	int edge1 = INVALID_ID, edge2 = INVALID_ID, rebalancer = INVALID_ID;
+
+	std::cout << "origins.size "<<origins.size()<<std::endl;
 
 	for(int y=0;y<origins.size();y++){
 		int origin=origins[y];
@@ -98,7 +94,7 @@ std::vector<ClusteredOriginDestination> importODPairsFrom(std::map<std::string,s
 		assert(volume >= 0);
 		pairs.emplace_back(origin, destination, rebalancer, edge1, edge2, volume);
 	}
-
+	std::cout << "pairs.size "<<pairs.size()<<std::endl;
 	return pairs;
 }
 
