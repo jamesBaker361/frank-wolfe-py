@@ -2,6 +2,9 @@
 
 class Garbage{
     public:
+
+        Garbage() : garbageInt(0) {}
+
         Garbage(int garbageInt) : garbageInt(garbageInt) {
             std::cout << "Garbage created with address "<< this<< std::endl;
         }
@@ -14,6 +17,19 @@ class Garbage{
             garbageInt = old.garbageInt;
         }
 
-    private:
+        int getGarbageInt(){
+            return garbageInt;
+        }
+
         int garbageInt;
+};
+
+class ChildGarbage : public Garbage{
+    public:
+        using Garbage::Garbage;
+        ChildGarbage() {
+        }
+        int getGarbageIntSquared(){
+            return garbageInt*garbageInt;
+        }
 };

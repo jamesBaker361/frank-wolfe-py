@@ -12,6 +12,7 @@ RUN apt-get -o Acquire::Check-Valid-Until=false -o Acquire::Check-Date=false upd
 	libcairo2-dev \
 	libnuma-dev \ 
 	libproj-dev \
+	libtbb-dev \
 	git-all \
 	zlib1g-dev \
 	cmake \
@@ -66,7 +67,7 @@ RUN scons
 #RUN scons -Q variant=Release
 #RUN scons -Q variant=Debug
 
-RUN g++ -o frankwolfe$(python3-config --extension-suffix) -std=c++14 -fopenmp -Werror -Wfatal-errors -Wpedantic -pedantic-errors -Wall -Wextra -Wno-missing-braces -Wno-unknown-pragmas -Wno-strict-overflow -Wno-sign-compare -O3 -shared -msse4 -fopenmp -DCSV_IO_NO_THREAD -fPIC $(python3 -m pybind11 --includes) $(python3-config --ldflags) -I. Launchers/AssignTrafficPython.cpp
+RUN g++ -o frankwolfe$(python3-config --extension-suffix) -std=c++17 -fopenmp -Werror -Wfatal-errors -Wpedantic -pedantic-errors -Wall -Wextra -Wno-missing-braces -Wno-unknown-pragmas -Wno-strict-overflow -Wno-sign-compare -O3 -shared -msse4 -fopenmp -DCSV_IO_NO_THREAD -fPIC $(python3 -m pybind11 --includes) $(python3-config --ldflags) -I. Launchers/AssignTrafficPython.cpp
 
 ENV PYTHONPATH=/frank-wolfe-traffic/:${PYTHONPATH}
 ENV PATH=/frank-wolfe-traffic/Build/Devel/Launchers/:${PATH}

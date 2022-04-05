@@ -66,10 +66,6 @@ public:
 		}
 	}
 
-	~Graph() {
-		std::cout<< "Graph destructor called address = " <<this<<std::endl;
-	}
-
 	void updateEdges(std::vector<int> newCapacity){
 		edgeCapacity=newCapacity;
 	}

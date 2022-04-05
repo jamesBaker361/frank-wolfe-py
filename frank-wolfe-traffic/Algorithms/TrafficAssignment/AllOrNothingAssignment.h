@@ -18,6 +18,8 @@
 #include "Tools/Simd/AlignedVector.h"
 #include "Tools/Timer.h"
 
+using ODPairs = std::vector<ClusteredOriginDestination>;
+
 // Implementation of an iterative all-or-nothing traffic assignment. Each OD-pair is processed in
 // turn and the corresponding OD-flow (in our case always a single flow unit) is assigned to each
 // edge on the shortest path between O and D. Other O-D paths are not assigned any flow. The
@@ -27,15 +29,15 @@ class AllOrNothingAssignment {
 public:
 	// Constructs an all-or-nothing assignment instance.
 	AllOrNothingAssignment(Graph& graph,
-						   const std::vector<ClusteredOriginDestination> odPairs,
+						   std::vector<ClusteredOriginDestination> & odPairs,
 						   const bool verbose = true, const bool elasticRebalance = false)
 		: stats(odPairs.size()),
 		  shortestPathAlgo(graph),
 		  inputGraph(graph),
-		  odPairs(odPairs),
 		  verbose(verbose),
 		  elasticRebalance(elasticRebalance)
 		{
+			//std::cout<< "allornthing args this.odPairs[0] address " << &this->odPairs[0]<<std::endl;
 			Timer timer;
 			shortestPathAlgo.preprocess();
 			stats.totalPreprocessingTime = timer.elapsed();
@@ -43,12 +45,11 @@ public:
 			stats.totalRoutingTime = stats.totalPreprocessingTime;
 			if (verbose) std::cout << "  Prepro: " << stats.totalPreprocessingTime << "ms" << std::endl;
 			paths = std::vector<std::vector<int>>(odPairs.size(), std::vector<int>());
+			for(ClusteredOriginDestination cod : odPairs){
+				this->odPairs.push_back(cod);
+			}
 		
 		}
-
-	~AllOrNothingAssignment() {
-		std::cout<< "AllOrNothingAssignment destructor called address = " <<this<<std::endl;
-	}
 
 	// Assigns all OD-flows to their currently shortest paths.
 	void run() {
@@ -57,16 +58,17 @@ public:
 		if (verbose) std::cout << "Iteration " << stats.numIterations << ": " << std::endl;
 
 		shortestPathAlgo.customize();
-		if (verbose) std::cout << "shortestPathAlgo.customize()" << std::endl;
+		//if (verbose) std::cout << "shortestPathAlgo.customize()" << std::endl;
 		stats.lastCustomizationTime = timer.elapsed();
-		if (verbose) std::cout << "stats.lastCustomizationTime = timer.elapsed();" << std::endl;
+		//if (verbose) std::cout << "stats.lastCustomizationTime = timer.elapsed();" << std::endl;
 		timer.restart();
-		if (verbose) std::cout << "timer.restart();" << std::endl;
+		//if (verbose) std::cout << "timer.restart();" << std::endl;
 		// assign initial flow of 0 to each edge
 		trafficFlows.assign(inputGraph.numEdges(), 0);
-		if (verbose) std::cout << "trafficFlows.assign(inputGraph.numEdges(), 0);" << std::endl;
+		//if (verbose) std::cout << "trafficFlows.assign(inputGraph.numEdges(), 0);" << std::endl;
 		stats.startIteration();
-		if (verbose) std::cout << "stats.startIteration();" << std::endl;
+		//if (verbose) std::cout << "stats.startIteration();" << std::endl;
+		//if (verbose) std::cout << "odPairs addres "<< &this->odPairs << std::endl;
 		// find shortest path between each OD pair and collect flows
 		if (elasticRebalance) // comptue for elastic AMoD
 		{
@@ -101,12 +103,12 @@ public:
 			}
 			for (int i = 0; i < odPairs.size(); i++){
 
-				if (verbose) std::cout << "for (int i = 0; i < odPairs.size(); i++){" << std::endl;
+				//if (verbose) std::cout << "for (int i = 0; i < odPairs.size(); i++){" << std::endl;
 				for(int j=0;j<paths[i].size();j++){
 					const auto& e =paths[i][j];
-					if (verbose) std::cout << "paths[i][j];" << std::endl;
+					//if (verbose) std::cout << "paths[i][j];" << std::endl;
 					trafficFlows[e] += odPairs[i].volume;
-					if (verbose) std::cout << "trafficFlows[e] += odPairs[i].volume;" << std::endl;
+					//if (verbose) std::cout << "trafficFlows[e] += odPairs[i].volume;" << std::endl;
 				}
 				
 			}
@@ -114,27 +116,27 @@ public:
 		}
 		else // compute for classic traffic assignment
 		{
-			if (verbose) std::cout << "(odPairs.size()" << odPairs.size() << std::endl;
 			//#pragma omp for
 			for (int i = 0; i < odPairs.size(); i++)
 			{	
-				if (verbose) std::cout << "&odPairs[i]" << &odPairs[i] << std::endl;
-				if (verbose) std::cout << "(odPairs[i].origin" << odPairs[i].origin << std::endl;
+				/*
+				if (verbose) std::cout << "&odPairs[i] " << &odPairs[i] << std::endl;
+				if (verbose) std::cout << "(odPairs[i].origin " << odPairs[i].origin << std::endl;
 				if (verbose) std::cout << "(odPairs[i].destination " << odPairs[i].destination << std::endl;
 				if (verbose) std::cout << "paths[i].size() " << paths[i].size() << std::endl;
+				*/
 				shortestPathAlgo.run(odPairs[i].origin, odPairs[i].destination, paths[i]);
 			}
 			//#pragma omp parallel
 			//{
-			if (verbose) std::cout << "loop" << std::endl;
+			//if (verbose) std::cout << "loop" << std::endl;
 			for (int i = 0; i < odPairs.size(); i++){
-				if (verbose) std::cout << "for (int i = 0; i < odPairs.size(); i++){" << std::endl;
 				for(int j=0;j<paths[i].size();j++){
-					if (verbose) std::cout << "for(int j=0;j<paths[i].size();j++){;" << std::endl;
+					//if (verbose) std::cout << "for(int j=0;j<paths[i].size();j++){;" << std::endl;
 					const auto& e =paths[i][j];
-					if (verbose) std::cout << "paths[i][j];" << std::endl;
+					//if (verbose) std::cout << "paths[i][j];" << std::endl;
 					trafficFlows[e] += odPairs[i].volume;
-					if (verbose) std::cout << "trafficFlows[e] += odPairs[i].volume;" << std::endl;
+					//if (verbose) std::cout << "trafficFlows[e] += odPairs[i].volume;" << std::endl;
 				}
 				
 			}
@@ -145,7 +147,6 @@ public:
 		stats.finishIteration();
 
 		if (verbose) {
-			std::cout << " done.\n";
 			std::cout << "  Checksum: " << stats.lastChecksum;
 			std::cout << "  Custom: " << stats.lastCustomizationTime << "ms";
 			std::cout << "  Queries: " << stats.lastQueryTime << "ms";
@@ -166,13 +167,12 @@ public:
 	}
 
 	AllOrNothingAssignmentStats stats; // Statistics about the execution.
+	ODPairs odPairs;
 
 private:
-	using ODPairs = std::vector<ClusteredOriginDestination>;
 
 	ShortestPathAlgoT shortestPathAlgo; // Algo computing shortest paths between OD-pairs.
 	Graph& inputGraph;					// The input graph.
-	const ODPairs& odPairs;             // The OD-pairs to be assigned onto the graph.
 	std::vector<int> trafficFlows;			// The traffic flows on the edges.
 	std::vector<std::vector<int>> paths;	// paths of the individual od pairs
 	const bool verbose;                 // Should informative messages be displayed?

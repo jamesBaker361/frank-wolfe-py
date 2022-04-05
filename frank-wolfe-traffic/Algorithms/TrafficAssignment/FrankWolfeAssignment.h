@@ -33,7 +33,7 @@ public:
 
 	// Constructs an assignment procedure based on the Frank-Wolfe method.
 
-	FrankWolfeAssignment(Graph& graph, const std::vector<ClusteredOriginDestination>& odPairs,const bool verbose = true, const bool elasticRebalance = false)
+	FrankWolfeAssignment(Graph& graph, std::vector<ClusteredOriginDestination> & odPairs,const bool verbose = true, const bool elasticRebalance = false)
 		: allOrNothingAssignment(graph, odPairs, verbose, elasticRebalance),
 		  graph(graph),	
 		  trafficFlows(graph.numEdges()),
@@ -41,6 +41,7 @@ public:
 		  travelCostFunction(graph),
 		  objFunction(travelCostFunction, graph), 
 		  verbose(verbose) {
+			  if (verbose) std::cout<< "FrankWolfeAssignment contructor called address = " <<this<<std::endl;
 			  stats.totalRunningTime = allOrNothingAssignment.stats.totalRoutingTime;
 		  }
 
@@ -48,15 +49,12 @@ public:
 		graph.updateEdges(newCapacity);
 	}
 
-	~FrankWolfeAssignment(){
-		std::cout<< "FrankWolfeAssignment destructor called address = " <<this<<std::endl;
-	}
-
 	// Assigns all OD-flows onto the input graph.
 
 	std::map<std::string,std::vector<int>> runPython(const int numIterations = 1) {
 		assert(numIterations >= 0);
-		const AllOrNothingAssignmentStats& substats = allOrNothingAssignment.stats;
+		AllOrNothingAssignmentStats& substats = allOrNothingAssignment.stats;
+		substats.reset();
 
 		std::vector<double> weights = std::vector<double>(numIterations, 0.0);
 		weights[0]=1.0;
@@ -215,8 +213,6 @@ public:
 	}
 
 	FrankWolfeAssignmentStats stats; // Statistics about the execution.
-
-private:
 
 	AllOrNothing allOrNothingAssignment;   // The all-or-nothing assignment algo used as a subroutine.
 	Graph& graph;               // The input graph.

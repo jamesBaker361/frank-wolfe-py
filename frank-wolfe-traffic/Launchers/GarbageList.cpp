@@ -19,7 +19,6 @@ class GarbageList{
     std::vector<Garbage> getGList(){
         return gList;
     }
-
-    private:
+    
     std::vector<Garbage>  gList;
 };

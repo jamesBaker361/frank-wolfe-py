@@ -71,7 +71,7 @@ class ClusteredOriginDestination {
  * 
  * @return A vector of ClusteredOriginDestination objects.
  */
-std::vector<ClusteredOriginDestination> & importODPairsFrom(std::map<std::string,std::vector<int>> demand) {
+std::vector<ClusteredOriginDestination> importODPairsFrom(std::map<std::string,std::vector<int>> demand) {
 	std::vector<ClusteredOriginDestination> pairs;
 	std::vector<int> origins=demand["origin"];
 	std::vector<int> destinations=demand["destination"];
@@ -94,7 +94,6 @@ std::vector<ClusteredOriginDestination> & importODPairsFrom(std::map<std::string
 		assert(volume >= 0);
 		pairs.emplace_back(origin, destination, rebalancer, edge1, edge2, volume);
 	}
-	std::cout << "pairs.size "<<pairs.size()<<std::endl;
 	return pairs;
 }
 

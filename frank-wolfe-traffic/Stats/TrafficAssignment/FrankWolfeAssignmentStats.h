@@ -1,8 +1,10 @@
 #pragma once
+#include <any>
 
 // Statistics about a Frank-Wolfe assignment, including times and measures of solution quality.
-struct FrankWolfeAssignmentStats {
+class FrankWolfeAssignmentStats {
   // Constructs a struct collecting statistics about a Frank-Wolfe assignment.
+  public:
   FrankWolfeAssignmentStats()
       : objFunctionValue(0),
         totalTravelCost(0),

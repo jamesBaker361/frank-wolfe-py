@@ -2,6 +2,7 @@
 
 #include <cstdint>
 #include <vector>
+#include "DataStructures/Pickleable.h"
 
 // Statistics about an iterative all-or-nothing assignment, including checksums and running times.
 struct AllOrNothingAssignmentStats {
@@ -26,6 +27,11 @@ struct AllOrNothingAssignmentStats {
     lastChecksum = 0;
     maxChangeInDistances = 0;
     avgChangeInDistances = 0;
+  }
+
+  void reset() {
+    lastDistances = std::vector<int>(lastDistances.size(),-1);
+    numIterations=0;
   }
 
   // Adds the values from the last iteration to the totals.

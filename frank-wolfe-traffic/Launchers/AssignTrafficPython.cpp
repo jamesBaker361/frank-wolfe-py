@@ -88,13 +88,37 @@ PYBIND11_MODULE(frankwolfe, m) {
 	py::class_<Garbage> (m, "Garbage")
 		.def(py::init([](int garbageInt){
 			return new Garbage(garbageInt);
+		}))
+		.def("getGarbageInt",&Garbage::getGarbageInt)
+		.def(py::pickle([](const Garbage &garb){ // __getstate__
+			return garb.garbageInt;
+		},[](int g){ // __setstate__
+			Garbage garb(g);
+			return garb;
 		}));
 	py::class_<GarbageList> (m, "GarbageList")
 		.def(py::init([](std::vector<Garbage> gList){
 			return new GarbageList(gList);
 		}))
-		.def("add",&GarbageList::add);
+		.def("add",&GarbageList::add)
+		.def("getGList",&GarbageList::getGList)
+		.def(py::pickle([](const GarbageList &gl){ // __getstate__
+			return gl.gList;
+		},[](std::vector< Garbage> gList){ // __setstate__
+			GarbageList gl(gList);
+			return gl;
+		}));
+	py::class_<ChildGarbage>(m,"ChildGarbage")
+		.def(py::init([](int garbageInt){
+			return new ChildGarbage(garbageInt);
+		}));
 	py::class_<AllOrNothing> (m, "AllOrNothingAssignment");
+	/*
+	.def(py::pickle([](){ // __getstate__
+
+		},[](){ // __setstate__
+
+		}));*/
 	py::class_<ClusteredOriginDestination> (m,"ClusteredOriginDestination")
 		.def_readwrite("origin",&ClusteredOriginDestination::origin)
 		.def_readwrite("destination",&ClusteredOriginDestination::destination)
@@ -105,15 +129,33 @@ PYBIND11_MODULE(frankwolfe, m) {
 		.def(py::init([](const int o, const int d, const int r, const int e1, const int e2, const int v){
 			return new ClusteredOriginDestination(o,d,r,e1,e2,v);
 		}));
+		/*
+		.def(py::pickle([](){ // __getstate__
+
+		},[](){ // __setstate__
+
+		})); */
 	py::class_<Graph> (m, "Graph") //std::map<std::string,std::vector<int>> edges,const double ceParameter, const double constParameter)
 		.def("updateEdges",&Graph::updateEdges)
 		.def(py::init([](std::map<std::string,std::vector<int>> edges,const double ceParameter, const double constParameter){
 			return new Graph(edges, ceParameter,constParameter);
 		}));
+		/*
+		.def(py::pickle([](){ // __getstate__
+
+		},[](){ // __setstate__
+
+		})); */
 	py::class_<base>(m, "FrankWolfeAssignment")
 		.def("runPython", &base::runPython)
 		.def("updateEdges",&base::updateEdges)
-		.def(py::init([](Graph& graph, const std::vector<ClusteredOriginDestination>& odPairs, const bool verbose, const bool elasticRebalance) {
+		.def(py::init([](Graph& graph, std::vector<ClusteredOriginDestination>& odPairs, const bool verbose, const bool elasticRebalance) {
         	return new base(graph,odPairs,verbose,elasticRebalance);
     	}));
+		/*
+		.def(py::pickle([](){ // __getstate__
+
+		},[](){ // __setstate__
+
+		}));*/
 }
