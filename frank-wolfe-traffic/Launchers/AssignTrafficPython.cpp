@@ -93,11 +93,6 @@ PYBIND11_MODULE(frankwolfe, m) {
     m.def("add", &add, "A function that adds two numbers");
 	m.def("flow", &flow, "calculate traffic flow");
 	m.def("getFWAssignment",&getFWAssignment, "return object that calculates flow");
-	py::class_<AllOrNothing> (m, "AllOrNothingAssignment");
-	py::class_<ShortestPathAlgoT>(m, "ShortestPathAlgo")
-		.def(py::init([](Graph& graph){
-			return new ShortestPathAlgoT(graph);
-		}));
 	py::class_<ClusteredOriginDestination> (m,"ClusteredOriginDestination")
 		.def_readwrite("origin",&ClusteredOriginDestination::origin)
 		.def_readwrite("destination",&ClusteredOriginDestination::destination)
@@ -109,20 +104,6 @@ PYBIND11_MODULE(frankwolfe, m) {
 			return new ClusteredOriginDestination(o,d,r,e1,e2,v);
 		}))
 		.PICKLECLASS(ClusteredOriginDestination,py::object,0,0,0,0,0,0);
-	py::class_<FrankWolfeAssignmentStats> (m, "FrankWolfeAssignmentStats")
-		.def(py::init([](){
-			return new FrankWolfeAssignmentStats();
-		}))
-		.PICKLECLASS_NOCONS(FrankWolfeAssignmentStats,py::object);
-	py::class_<AllOrNothingAssignmentStats> (m, "AllOrNothingAssignmentStats")
-		.def_readwrite("lastDistances", &AllOrNothingAssignmentStats::lastDistances)
-		.def("addToDistances", &AllOrNothingAssignmentStats::addToDistances)
-		.def("getState", &AllOrNothingAssignmentStats::getState)
-		.def("setState", &AllOrNothingAssignmentStats::setState)
-		.def(py::init([](const int numODPairs){
-			return new AllOrNothingAssignmentStats(numODPairs);
-		}))
-		.PICKLECLASS(AllOrNothingAssignmentStats,py::object,0);
 	py::class_<Graph> (m, "Graph") //std::map<std::string,std::vector<int>> edges,const double ceParameter, const double constParameter)
 		.def("updateEdges",&Graph::updateEdges)
 		.def_readwrite("vertexNum",&Graph::vertexNum)
