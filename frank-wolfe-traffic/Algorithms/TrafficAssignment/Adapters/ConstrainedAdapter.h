@@ -214,19 +214,19 @@ private:
 	struct LengthMap 
 	{
 		typedef double Value;
-		LengthMap(std::vector<double>& lengths, LemonGraph& lg) : lengths(lengths), lg(lg) { }
+		LengthMap(std::vector<double> lengths, LemonGraph lg) : lengths(lengths), lg(lg) { }
 		
 		double operator[](Arc e) const
 		{
 			return lengths[lg.index(e)];
 		}
 
-		std::vector<double>& lengths;
-		LemonGraph& lg;
+		std::vector<double> lengths;
+		LemonGraph lg;
 	};
 
-	Graph& graph;									// Input graph
-	std::vector<double>& weights;					// Specifies edge travel time for search
+	Graph graph;									// Input graph
+	std::vector<double> weights;					// Specifies edge travel time for search
 	std::map<std::pair<int,int>,double> distances;	// Specifies normal distances used as constraints
 	BoostGraph boostGraph;							// Graph for constrained search
 	LemonGraph lemonGraph;							// Graph for computing the normal distance

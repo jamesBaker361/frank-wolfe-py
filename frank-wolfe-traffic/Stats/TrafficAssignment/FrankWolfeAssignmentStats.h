@@ -1,5 +1,9 @@
 #pragma once
 #include <any>
+#include <pybind11/pybind11.h>
+#include <pybind11/stl.h>
+#include <pybind11/stl_bind.h>
+namespace py = pybind11;
 
 // Statistics about a Frank-Wolfe assignment, including times and measures of solution quality.
 class FrankWolfeAssignmentStats {
@@ -23,6 +27,23 @@ class FrankWolfeAssignmentStats {
     totalLineSearchTime += lastLineSearchTime;
     totalRunningTime += lastRunningTime;
   }
+
+  /*std::map<std::string, py::object> getState() const {
+			std::map<std::string, py::object> dict;
+      GET_STATE(objFunctionValue,totalTravelCost,lastLineSearchTime,lastRunningTime)
+			return dict;
+		}
+    GET_FUNCTION(objFunctionValue,totalTravelCost,lastLineSearchTime,lastRunningTime)
+
+  void setState(std::map<std::string,py::object> dict){ 
+    SET_STATE(objFunctionValue,double,
+    totalTravelCost,double,
+    lastLineSearchTime,int)
+  }*/
+  GET_FUNCTION(objFunctionValue,totalTravelCost,lastLineSearchTime,lastRunningTime)
+  SET_FUNCTION(objFunctionValue,double,
+    totalTravelCost,double,
+    lastLineSearchTime,int)
 
   double objFunctionValue; // The value of the objective function resulting from current edge flows.
   double totalTravelCost;  // The total travel cost resulting from current edge flows.

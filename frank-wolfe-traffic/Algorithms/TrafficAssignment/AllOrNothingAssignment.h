@@ -28,8 +28,8 @@ template <typename ShortestPathAlgoT>
 class AllOrNothingAssignment {
 public:
 	// Constructs an all-or-nothing assignment instance.
-	AllOrNothingAssignment(Graph& graph,
-						   std::vector<ClusteredOriginDestination> & odPairs,
+	AllOrNothingAssignment(Graph graph,
+						   std::vector<ClusteredOriginDestination>  odPairs,
 						   const bool verbose = true, const bool elasticRebalance = false)
 		: stats(odPairs.size()),
 		  shortestPathAlgo(graph),
@@ -172,7 +172,7 @@ public:
 private:
 
 	ShortestPathAlgoT shortestPathAlgo; // Algo computing shortest paths between OD-pairs.
-	Graph& inputGraph;					// The input graph.
+	Graph inputGraph;					// The input graph.
 	std::vector<int> trafficFlows;			// The traffic flows on the edges.
 	std::vector<std::vector<int>> paths;	// paths of the individual od pairs
 	const bool verbose;                 // Should informative messages be displayed?

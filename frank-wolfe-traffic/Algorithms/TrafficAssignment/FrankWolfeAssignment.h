@@ -16,6 +16,14 @@
 #include "Tools/Timer.h"
 #include "Stats/TrafficAssignment/FrankWolfeAssignmentStats.h"
 
+#include "DataStructures/Pickleable.h"
+#include <pybind11/pybind11.h>
+#include <pybind11/stl.h>
+#include <pybind11/stl_bind.h>
+
+
+namespace py = pybind11;
+
 // #define TA_NO_CFW 
 
 // A traffic assignment procedure based on the Frank-Wolfe method (also known as convex combinations
@@ -33,21 +41,25 @@ public:
 
 	// Constructs an assignment procedure based on the Frank-Wolfe method.
 
-	FrankWolfeAssignment(Graph& graph, std::vector<ClusteredOriginDestination> & odPairs,const bool verbose = true, const bool elasticRebalance = false)
-		: allOrNothingAssignment(graph, odPairs, verbose, elasticRebalance),
-		  graph(graph),	
+	FrankWolfeAssignment(Graph graph, std::vector<ClusteredOriginDestination>  ODPairs,const bool verbose = true, const bool elasticRebalance = false)
+		: allOrNothingAssignment(graph, ODPairs, verbose, elasticRebalance),
+		  graph(graph),
+		  ODPairs(ODPairs),
 		  trafficFlows(graph.numEdges()),
 		  pointOfSight(graph.numEdges()),
 		  travelCostFunction(graph),
 		  objFunction(travelCostFunction, graph), 
-		  verbose(verbose) {
-			  if (verbose) std::cout<< "FrankWolfeAssignment contructor called address = " <<this<<std::endl;
+		  verbose(verbose),
+		  elasticRebalance(elasticRebalance) {
 			  stats.totalRunningTime = allOrNothingAssignment.stats.totalRoutingTime;
 		  }
 
 	void updateEdges(std::vector<int> newCapacity){
 		graph.updateEdges(newCapacity);
 	}
+
+	GET_FUNCTION(graph,ODPairs,verbose,elasticRebalance)
+
 
 	// Assigns all OD-flows onto the input graph.
 
@@ -215,12 +227,14 @@ public:
 	FrankWolfeAssignmentStats stats; // Statistics about the execution.
 
 	AllOrNothing allOrNothingAssignment;   // The all-or-nothing assignment algo used as a subroutine.
-	Graph& graph;               // The input graph.
+	Graph graph;               // The input graph.
+	std::vector<ClusteredOriginDestination>  ODPairs;
 	std::vector<double> trafficFlows;    // The traffic flows on the edges.
 	std::vector<double> pointOfSight;            // The point defining the descent direction d = s - x
 	TravelCostFunction travelCostFunction; // A functor returning the travel cost on an edge.
 	ObjFunction objFunction;               // The objective function to be minimized (UE or SO).			// Output file for path weights
 	const bool verbose;                    // Should informative messages be displayed?
+	const bool elasticRebalance;
 	std::vector<std::vector<int>> paths;	// paths of the individual od pairs
 };
 
