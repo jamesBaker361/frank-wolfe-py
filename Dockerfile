@@ -30,11 +30,9 @@ RUN python3 -m pip install numpy \
 	networkx \
 	pytest \
 	pybind11 \
-	stable-baselines3 \
-	tf-agents[reverb] \
-	tensorforce \
 	gym==0.22.0 \
 	tune \
+	tensorflow \
 	ray[rllib]
 
 
@@ -63,7 +61,7 @@ RUN cd vectorclass && mkdir /usr/local/include/vectorclass && cp *.h special/* $
 
 WORKDIR ..
 
-RUN scons
+#RUN scons
 #RUN scons -Q variant=Release
 #RUN scons -Q variant=Debug
 

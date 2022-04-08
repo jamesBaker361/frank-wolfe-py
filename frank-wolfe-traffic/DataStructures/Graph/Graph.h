@@ -13,6 +13,14 @@
 #include <vector>
 #include <csv.h>
 
+#include "DataStructures/Pickleable.h"
+#include <pybind11/pybind11.h>
+#include <pybind11/stl.h>
+#include <pybind11/stl_bind.h>
+namespace py = pybind11;
+
+#define VECTORCOPY(vec) for(auto i: other.vec){vec.push_back(i);}
+
 class Graph
 {
 public:
@@ -20,6 +28,22 @@ public:
 	Graph(const std::string& filename, const double ceParameter, const double constParameter) : vertexNum(0), ceParameter(ceParameter), constParameter(constParameter) {
 		vertexNum = 0;
 		readFrom(filename);
+	}
+
+	Graph(){}
+
+	
+	void DeepCopyGraph(const Graph& other){
+		ceParameter=other.ceParameter;
+		constParameter=other.constParameter;
+		vertexNum=other.vertexNum;
+		VECTORCOPY(edgeTail)
+		VECTORCOPY(edgeHead)
+		VECTORCOPY(edgeLength)
+		VECTORCOPY(edgeCapacity)
+		VECTORCOPY(edgeSpeed)
+		VECTORCOPY(edgeFreeTravelTime)
+		VECTORCOPY(edgeWeight)
 	}
 
 /**
@@ -66,6 +90,12 @@ public:
 		}
 	}
 
+/**
+ * Update the edge capacity vector
+ * 
+ * @param newCapacity a vector of integers, where each integer represents the capacity of the edge
+ * between the corresponding pair of vertices.
+ */
 	void updateEdges(std::vector<int> newCapacity){
 		edgeCapacity=newCapacity;
 	}
@@ -151,8 +181,6 @@ public:
 	{
 		return constParameter;
 	}
-	
-private:
 	template <int numFields>
 	using CsvDialect = io::CSVReader<numFields>;
 	
@@ -198,6 +226,18 @@ private:
 
 	double ceParameter; // parameter for combined equilibrium calculation
 	double constParameter; // parameter for constrained search (normal distance multiplier) 
+
+	GET_FUNCTION(vertexNum,edgeTail,edgeHead,edgeCapacity,edgeLength,edgeSpeed,edgeFreeTravelTime,edgeWeight,ceParameter,constParameter)
+	SET_FUNCTION(vertexNum,int,
+		edgeTail, std::vector<int>,
+		edgeHead,std::vector<int>,
+		edgeCapacity, std::vector<int>,
+		edgeLength, std::vector<int>,
+		edgeSpeed, std::vector<int>,
+		edgeFreeTravelTime,std::vector<double>,
+		edgeWeight,std::vector<double>,
+		ceParameter,double,
+		constParameter,double)
 };
 
 // Iteration macros for conveniently looping through vertices or edges of a graph.

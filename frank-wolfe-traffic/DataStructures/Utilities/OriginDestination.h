@@ -5,8 +5,14 @@
 #include <vector>
 
 #include <csv.h>
+#include "DataStructures/Pickleable.h"
 
 #include "Tools/Constants.h"
+
+#include <pybind11/pybind11.h>
+#include <pybind11/stl.h>
+#include <pybind11/stl_bind.h>
+namespace py = pybind11;
 
 // An origin-destination (OD) pair, representing a travel demand or a query.
 struct OriginDestination {
@@ -56,6 +62,30 @@ class ClusteredOriginDestination {
 			return false;
 		return origin < rhs.origin || (origin == rhs.origin && destination < rhs.destination);
 	}
+	/*
+		void setState(std::map<std::string, py::object> dict) {
+			SET_STATE(origin,int,
+			destination,int,
+			 rebalancer,int,
+			  edge1, int,
+			   edge2,int,
+			    volume,int)
+		}
+
+		std::map<std::string, py::object> getState() const {
+			std::map<std::string, py::object> dict;
+			GET_STATE(origin,destination, rebalancer, edge1, edge2, volume)
+			return dict;
+		}*/
+
+		GET_FUNCTION(origin,destination, rebalancer, edge1, edge2, volume)
+		SET_FUNCTION(origin,int,
+			destination,int,
+			 rebalancer,int,
+			  edge1, int,
+			   edge2,int,
+			    volume,int)
+
 		int origin;
 		int destination;
 		int volume; 
@@ -82,7 +112,7 @@ std::vector<ClusteredOriginDestination> importODPairsFrom(std::map<std::string,s
 
 	int edge1 = INVALID_ID, edge2 = INVALID_ID, rebalancer = INVALID_ID;
 
-	std::cout << "origins.size "<<origins.size()<<std::endl;
+	//std::cout << "origins.size "<<origins.size()<<std::endl;
 
 	for(int y=0;y<origins.size();y++){
 		int origin=origins[y];

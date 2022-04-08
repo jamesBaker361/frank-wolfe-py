@@ -68,7 +68,7 @@ public:
 		//if (verbose) std::cout << "trafficFlows.assign(inputGraph.numEdges(), 0);" << std::endl;
 		stats.startIteration();
 		//if (verbose) std::cout << "stats.startIteration();" << std::endl;
-		//if (verbose) std::cout << "odPairs addres "<< &this->odPairs << std::endl;
+		if (verbose) std::cout << "odPairs addres "<< &this->odPairs << std::endl;
 		// find shortest path between each OD pair and collect flows
 		if (elasticRebalance) // comptue for elastic AMoD
 		{
@@ -119,12 +119,12 @@ public:
 			//#pragma omp for
 			for (int i = 0; i < odPairs.size(); i++)
 			{	
-				/*
+				
 				if (verbose) std::cout << "&odPairs[i] " << &odPairs[i] << std::endl;
 				if (verbose) std::cout << "(odPairs[i].origin " << odPairs[i].origin << std::endl;
 				if (verbose) std::cout << "(odPairs[i].destination " << odPairs[i].destination << std::endl;
 				if (verbose) std::cout << "paths[i].size() " << paths[i].size() << std::endl;
-				*/
+				
 				shortestPathAlgo.run(odPairs[i].origin, odPairs[i].destination, paths[i]);
 			}
 			//#pragma omp parallel
@@ -136,7 +136,7 @@ public:
 					const auto& e =paths[i][j];
 					//if (verbose) std::cout << "paths[i][j];" << std::endl;
 					trafficFlows[e] += odPairs[i].volume;
-					//if (verbose) std::cout << "trafficFlows[e] += odPairs[i].volume;" << std::endl;
+					if (verbose) std::cout << "trafficFlows[e] += odPairs[i].volume;" << std::endl;
 				}
 				
 			}
