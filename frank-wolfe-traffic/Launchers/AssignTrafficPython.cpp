@@ -45,25 +45,40 @@ using base= FrankWolfeAssignment<UserEquilibrium,BprFunction,ShortestPathAlgoT>;
 using AllOrNothing = AllOrNothingAssignment<ShortestPathAlgoT>;
 namespace py = pybind11;
 
-/**
- * It takes in a map of demand, a map of edges, and a number of iterations. It then runs the assignment
- * algorithm on the graph with the given demand and edges.
- * 
- * @param demand a map of origin-destination pairs of the form {origin: [], destination: [], volume:[]}
- * @param edges a map of edges {edge_tail: [], "edge_head":[], "length":[], "capacity":[], "speed":[]}
- * @param numIterations the number of iterations to run the algorithm for.
- * 
- * @return A map of the form {tail: [], head: [],flow: []}
- */
-std::map<std::string,std::vector<int>> flow(std::map<std::string,std::vector<int>> demand, std::map<std::string,std::vector<int>> edges, int numIterations){
-	Graph graph(edges,0.0,100.0);
-	std::vector<ClusteredOriginDestination> ODPairs =importODPairsFrom(demand);
-	bool verbose =false;
-	bool elasticRebalance=false;
-	FrankWolfeAssignment<UserEquilibrium,BprFunction,DijkstraAdapter> assign(graph,ODPairs,verbose,elasticRebalance);
 
-	return assign.runPython(numIterations);
-}
+class AssignTrafficPython{
+	public:
+	AssignTrafficPython(){
+
+	}
+	AssignTrafficPython(int flag): flag(flag){
+
+	}
+
+		/**
+	 * It takes in a map of demand, a map of edges, and a number of iterations. It then runs the assignment
+	 * algorithm on the graph with the given demand and edges.
+	 * 
+	 * @param demand a map of origin-destination pairs of the form {origin: [], destination: [], volume:[]}
+	 * @param edges a map of edges {edge_tail: [], "edge_head":[], "length":[], "capacity":[], "speed":[]}
+	 * @param numIterations the number of iterations to run the algorithm for.
+	 * 
+	 * @return A map of the form {tail: [], head: [],flow: []}
+	 */
+	std::map<std::string,std::vector<int>> flow(std::map<std::string,std::vector<int>> demand, std::map<std::string,std::vector<int>> edges, int numIterations){
+		Graph graph(edges,0.0,100.0);
+		std::vector<ClusteredOriginDestination> ODPairs =importODPairsFrom(demand);
+		bool verbose =false;
+		bool elasticRebalance=false;
+		FrankWolfeAssignment<UserEquilibrium,BprFunction,DijkstraAdapter> assign(graph,ODPairs,verbose,elasticRebalance);
+
+		return assign.runPython(numIterations);
+	}
+
+	int flag;
+
+};
+
 
 int add(int i, int j) {
     return i + j;
@@ -83,15 +98,20 @@ PYBIND11_MODULE(frankwolfe, m) {
     m.doc() = "pybind11  plugin"; // optional module docstring
 	m.def("importODPairsFrom",&importODPairsFrom); //importODPairsFrom(std::map<std::string,std::vector<int>> demand)
     m.def("add", &add, "A function that adds two numbers");
-	m.def("flow", &flow, "calculate traffic flow");
 	m.def("getFWAssignment",&getFWAssignment, "return object that calculates flow");
-	py::class_<AllOrNothing> (m, "AllOrNothingAssignment");
-	/*
-	.def(py::pickle([](){ // __getstate__
-
-		},[](){ // __setstate__
-
-		}));*/
+	py::class_<AssignTrafficPython> (m, "AssignTrafficPython")
+		.def("flow", &AssignTrafficPython::flow)
+		.def(py::init([](){
+			return new AssignTrafficPython();
+		}))
+		.def(py::pickle([](const AssignTrafficPython & atp){ // __getstate__
+			std::map<std::string,int> dict;
+			dict["flag"]=atp.flag;
+			return dict;
+		},[](std::map<std::string,int> dict){ // __setstate__
+			int flag=dict["flag"];
+			return new AssignTrafficPython(flag);
+		}));
 	py::class_<ClusteredOriginDestination> (m,"ClusteredOriginDestination")
 		.def_readwrite("origin",&ClusteredOriginDestination::origin)
 		.def_readwrite("destination",&ClusteredOriginDestination::destination)
