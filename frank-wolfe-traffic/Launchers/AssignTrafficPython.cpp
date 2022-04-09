@@ -57,10 +57,10 @@ namespace py = pybind11;
  */
 std::map<std::string,std::vector<int>> flow(std::map<std::string,std::vector<int>> demand, std::map<std::string,std::vector<int>> edges, int numIterations){
 	Graph graph(edges,0.0,100.0);
-	std::vector<ClusteredOriginDestination> odPairs =importODPairsFrom(demand);
+	std::vector<ClusteredOriginDestination> ODPairs =importODPairsFrom(demand);
 	bool verbose =false;
 	bool elasticRebalance=false;
-	FrankWolfeAssignment<UserEquilibrium,BprFunction,DijkstraAdapter> assign(graph,odPairs,verbose,elasticRebalance);
+	FrankWolfeAssignment<UserEquilibrium,BprFunction,DijkstraAdapter> assign(graph,ODPairs,verbose,elasticRebalance);
 
 	return assign.runPython(numIterations);
 }
@@ -71,10 +71,10 @@ int add(int i, int j) {
 
 FrankWolfeAssignment<UserEquilibrium,BprFunction,DijkstraAdapter> getFWAssignment(std::map<std::string,std::vector<int>> demand, std::map<std::string,std::vector<int>> edges){
 	Graph graph(edges,0.0,100.0);
-	std::vector<ClusteredOriginDestination> odPairs =importODPairsFrom(demand);
+	std::vector<ClusteredOriginDestination> ODPairs =importODPairsFrom(demand);
 	bool verbose =false;
 	bool elasticRebalance=false;
-	FrankWolfeAssignment<UserEquilibrium,BprFunction,DijkstraAdapter> assign(graph,odPairs,verbose,elasticRebalance);
+	FrankWolfeAssignment<UserEquilibrium,BprFunction,DijkstraAdapter> assign(graph,ODPairs,verbose,elasticRebalance);
 	return assign;
 }
 
@@ -85,33 +85,6 @@ PYBIND11_MODULE(frankwolfe, m) {
     m.def("add", &add, "A function that adds two numbers");
 	m.def("flow", &flow, "calculate traffic flow");
 	m.def("getFWAssignment",&getFWAssignment, "return object that calculates flow");
-	py::class_<Garbage> (m, "Garbage")
-		.def(py::init([](int garbageInt){
-			return new Garbage(garbageInt);
-		}))
-		.def("getGarbageInt",&Garbage::getGarbageInt)
-		.def(py::pickle([](const Garbage &garb){ // __getstate__
-			return garb.garbageInt;
-		},[](int g){ // __setstate__
-			Garbage garb(g);
-			return garb;
-		}));
-	py::class_<GarbageList> (m, "GarbageList")
-		.def(py::init([](std::vector<Garbage> gList){
-			return new GarbageList(gList);
-		}))
-		.def("add",&GarbageList::add)
-		.def("getGList",&GarbageList::getGList)
-		.def(py::pickle([](const GarbageList &gl){ // __getstate__
-			return gl.gList;
-		},[](std::vector< Garbage> gList){ // __setstate__
-			GarbageList gl(gList);
-			return gl;
-		}));
-	py::class_<ChildGarbage>(m,"ChildGarbage")
-		.def(py::init([](int garbageInt){
-			return new ChildGarbage(garbageInt);
-		}));
 	py::class_<AllOrNothing> (m, "AllOrNothingAssignment");
 	/*
 	.def(py::pickle([](){ // __getstate__
@@ -128,34 +101,69 @@ PYBIND11_MODULE(frankwolfe, m) {
 		.def_readwrite("edge2",&ClusteredOriginDestination::edge2)
 		.def(py::init([](const int o, const int d, const int r, const int e1, const int e2, const int v){
 			return new ClusteredOriginDestination(o,d,r,e1,e2,v);
+		}))
+		.def(py::pickle([](const ClusteredOriginDestination & cod){ // __getstate__
+			std::map<std::string,int> dict;
+			dict["origin"]=cod.origin;
+			dict["destination"]=cod.destination;
+			dict["volume"]=cod.volume;
+			dict["rebalancer"]=cod.rebalancer;
+			dict["edge1"]=cod.edge1;
+			dict["edge2"]=cod.edge2;
+			return dict;
+		},[](std::map<std::string,int> dict){ // __setstate__
+			int origin=dict["origin"];
+			int destination=dict["destination"];
+			int volume=dict["volume"];
+			int rebalancer=dict["rebalancer"];
+			int edge1=dict["edge1"];
+			int edge2=dict["edge2"];
+			return new ClusteredOriginDestination(origin,destination,rebalancer, edge1, edge2, volume);
 		}));
-		/*
-		.def(py::pickle([](){ // __getstate__
-
-		},[](){ // __setstate__
-
-		})); */
 	py::class_<Graph> (m, "Graph") //std::map<std::string,std::vector<int>> edges,const double ceParameter, const double constParameter)
 		.def("updateEdges",&Graph::updateEdges)
+		.def_readwrite("constParameter",&Graph::constParameter)
+		.def_readwrite("ceParameter",&Graph::ceParameter)
+		.def_readwrite("edges",&Graph::edges)
+		.def_readwrite("edgeTail",&Graph::edgeTail)
+		.def_readwrite("edgeHead",&Graph::edgeHead)
+		.def_readwrite("edgeCapacity",&Graph::edgeCapacity)
+		.def_readwrite("edgeLength",&Graph::edgeLength)
+		.def_readwrite("edgeFreeTravelTime",&Graph::edgeFreeTravelTime)
+		.def_readwrite("edgeWeight",&Graph::edgeWeight)
 		.def(py::init([](std::map<std::string,std::vector<int>> edges,const double ceParameter, const double constParameter){
 			return new Graph(edges, ceParameter,constParameter);
+		}))
+		.def(py::pickle([](const Graph& gr){ // __getstate__
+			std::map<std::string,py::object> dict;
+			dict["edges"]=py::cast(gr.edges);
+			dict["ceParameter"]=py::cast(gr.ceParameter);
+			dict["constParameter"]=py::cast(gr.constParameter);
+			return dict;
+		},[](std::map<std::string,py::object> dict){ // __setstate__
+			std::map<std::string,std::vector<int>> edges=dict["edges"].cast<std::map<std::string,std::vector<int>>>();
+			double ceParameter=dict["ceParameter"].cast<double>();
+			double constParameter=dict["constParameter"].cast<double>();
+			return new Graph(edges, ceParameter,constParameter);
 		}));
-		/*
-		.def(py::pickle([](){ // __getstate__
-
-		},[](){ // __setstate__
-
-		})); */
 	py::class_<base>(m, "FrankWolfeAssignment")
 		.def("runPython", &base::runPython)
 		.def("updateEdges",&base::updateEdges)
-		.def(py::init([](Graph& graph, std::vector<ClusteredOriginDestination>& odPairs, const bool verbose, const bool elasticRebalance) {
-        	return new base(graph,odPairs,verbose,elasticRebalance);
-    	}));
-		/*
-		.def(py::pickle([](){ // __getstate__
-
-		},[](){ // __setstate__
-
-		}));*/
+		.def(py::init([](Graph & graph, std::vector<ClusteredOriginDestination> & ODPairs, const bool verbose, const bool elasticRebalance) {
+        	return new base(graph,ODPairs,verbose,elasticRebalance);
+    	}))
+		.def(py::pickle([](const base& fwa){ // __getstate__
+			std::map<std::string,py::object> dict;
+			dict["ODPairs"]=py::cast(fwa.ODPairs);
+			dict["graph"]=py::cast(fwa.graph);
+			dict["verbose"]=py::cast(fwa.verbose);
+			dict["elasticRebalance"]=py::cast(fwa.elasticRebalance);
+			return dict;
+		},[](std::map<std::string,py::object> dict){ // __setstate__
+			std::vector<ClusteredOriginDestination> ODPairs=dict["ODPairs"].cast<std::vector<ClusteredOriginDestination>>();
+			Graph graph=dict["graph"].cast<Graph>();
+			bool verbose =dict["verbose"].cast<bool>();
+			bool elasticRebalance=dict["elasticRebalance"].cast<bool>();
+			return new base(graph,ODPairs,verbose,elasticRebalance);
+		}));
 }

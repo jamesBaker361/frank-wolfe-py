@@ -33,14 +33,16 @@ public:
 
 	// Constructs an assignment procedure based on the Frank-Wolfe method.
 
-	FrankWolfeAssignment(Graph& graph, std::vector<ClusteredOriginDestination> & odPairs,const bool verbose = true, const bool elasticRebalance = false)
-		: allOrNothingAssignment(graph, odPairs, verbose, elasticRebalance),
-		  graph(graph),	
+	FrankWolfeAssignment(Graph & graph, std::vector<ClusteredOriginDestination> &  ODPairs,const bool verbose = false, const bool elasticRebalance = false)
+		: allOrNothingAssignment(graph, ODPairs, verbose, elasticRebalance),
+		  graph(graph),
+		  ODPairs(ODPairs),
 		  trafficFlows(graph.numEdges()),
 		  pointOfSight(graph.numEdges()),
 		  travelCostFunction(graph),
 		  objFunction(travelCostFunction, graph), 
-		  verbose(verbose) {
+		  verbose(verbose),
+		  elasticRebalance(elasticRebalance) {
 			  if (verbose) std::cout<< "FrankWolfeAssignment contructor called address = " <<this<<std::endl;
 			  stats.totalRunningTime = allOrNothingAssignment.stats.totalRoutingTime;
 		  }
@@ -216,11 +218,13 @@ public:
 
 	AllOrNothing allOrNothingAssignment;   // The all-or-nothing assignment algo used as a subroutine.
 	Graph& graph;               // The input graph.
+	std::vector<ClusteredOriginDestination> ODPairs;
 	std::vector<double> trafficFlows;    // The traffic flows on the edges.
 	std::vector<double> pointOfSight;            // The point defining the descent direction d = s - x
 	TravelCostFunction travelCostFunction; // A functor returning the travel cost on an edge.
 	ObjFunction objFunction;               // The objective function to be minimized (UE or SO).			// Output file for path weights
 	const bool verbose;                    // Should informative messages be displayed?
+	const bool elasticRebalance;
 	std::vector<std::vector<int>> paths;	// paths of the individual od pairs
 };
 

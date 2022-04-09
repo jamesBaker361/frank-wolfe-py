@@ -31,7 +31,7 @@ public:
  * @param constParameter
  */
 	Graph(std::map<std::string,std::vector<int>> edges,const double ceParameter, const double constParameter) : 
-	vertexNum(0), ceParameter(ceParameter), constParameter(constParameter){
+	vertexNum(0), ceParameter(ceParameter), constParameter(constParameter), edges(edges){
 		vertexNum = 0;
 		edgeTail=edges["edge_tail"];
 		edgeHead=edges["edge_head"];
@@ -152,7 +152,7 @@ public:
 		return constParameter;
 	}
 	
-private:
+
 	template <int numFields>
 	using CsvDialect = io::CSVReader<numFields>;
 	
@@ -188,6 +188,7 @@ private:
 	}
 	
 	int vertexNum;
+	
 	std::vector<int> edgeTail;
 	std::vector<int> edgeHead;
 	std::vector<int> edgeCapacity; // vehicles / h
@@ -198,6 +199,7 @@ private:
 
 	double ceParameter; // parameter for combined equilibrium calculation
 	double constParameter; // parameter for constrained search (normal distance multiplier) 
+	std::map<std::string,std::vector<int>> edges;
 };
 
 // Iteration macros for conveniently looping through vertices or edges of a graph.
