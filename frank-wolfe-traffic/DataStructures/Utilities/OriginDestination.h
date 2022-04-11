@@ -82,8 +82,6 @@ std::vector<ClusteredOriginDestination> importODPairsFrom(std::map<std::string,s
 
 	int edge1 = INVALID_ID, edge2 = INVALID_ID, rebalancer = INVALID_ID;
 
-	std::cout << "origins.size "<<origins.size()<<std::endl;
-
 	for(int y=0;y<origins.size();y++){
 		int origin=origins[y];
 		int destination=destinations[y];

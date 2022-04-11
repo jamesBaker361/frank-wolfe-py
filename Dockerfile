@@ -7,7 +7,7 @@ RUN apt-get -o Acquire::Check-Valid-Until=false -o Acquire::Check-Date=false upd
 	build-essential \
 	wget \
 	scons \
-	python3 \
+	rsync \
 	libboost-all-dev \
 	libcairo2-dev \
 	libnuma-dev \ 
@@ -31,14 +31,18 @@ RUN python3 -m pip install numpy \
 	pytest \
 	pybind11 \
 	gym==0.22.0 \
+	typing-extensions \
+	setuptools \
 	tune \
-	ray[rllib]
+	ray[rllib] \
+	tensorflow
 
 
 SHELL ["/bin/bash", "-c"]
 
 #RUN git clone https://github.com/StanfordASL/frank-wolfe-traffic.git
 COPY frank-wolfe-traffic frank-wolfe-traffic
+COPY traffic_gym traffic_gym
 WORKDIR frank-wolfe-traffic/External
 
 RUN git clone https://github.com/RoutingKit/RoutingKit.git
@@ -66,5 +70,9 @@ RUN scons
 
 RUN g++ -o frankwolfe$(python3-config --extension-suffix) -std=c++17 -fopenmp -Werror -Wfatal-errors -Wpedantic -pedantic-errors -Wall -Wextra -Wno-missing-braces -Wno-unknown-pragmas -Wno-strict-overflow -Wno-sign-compare -O3 -shared -msse4 -fopenmp -DCSV_IO_NO_THREAD -fPIC $(python3 -m pybind11 --includes) $(python3-config --ldflags) -I. Launchers/AssignTrafficPython.cpp
 
+
+
 ENV PYTHONPATH=/frank-wolfe-traffic/:${PYTHONPATH}
 ENV PATH=/frank-wolfe-traffic/Build/Devel/Launchers/:${PATH}
+
+RUN cd .. && cd traffic_gym && pip install -e .
