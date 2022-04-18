@@ -4,6 +4,7 @@ import sys
 import frankwolfe as fw
 from gym.spaces import Discrete, Box
 from ray.rllib.env.env_context import EnvContext
+import tensorflow as tf
 
 class TrafficEnv(gym.Env):
 	"""Example of a custom env in for traffic"""
@@ -23,8 +24,8 @@ class TrafficEnv(gym.Env):
 
 		self.space_size=len(self.state)
 
-		self.action_space = Box(np.array([0.0 for _ in range(self.space_size)]),np.array([1.0 for _ in range(self.space_size)]))
-		self.observation_space =Box(np.array([0.0 for _ in range(self.space_size)]),np.array([sys.maxsize for _ in range(self.space_size)]))
+		self.action_space = Box(np.array([0.0 for _ in range(self.space_size)]),np.array([1.0 for _ in range(self.space_size)]),dtype=np.float32)
+		self.observation_space =Box(np.array([0.0 for _ in range(self.space_size)]),np.array([sys.float_info.max for _ in range(self.space_size)]),dtype=np.float32)
 		
 
 	def reset(self):
@@ -45,7 +46,7 @@ class TrafficEnv(gym.Env):
 
 		self.state=assign.runPython(100)'''
 		atp=fw.AssignTrafficPython()
-		self.state=atp.flow(self.demand,self.perturbed,100)["flow"]
+		self.state=np.cast["float32"](atp.flow(self.demand,self.perturbed,100)["flow"])
 		diff=[]
 		for a,b in zip(self.real_flow,self.state):
 			diff.append(np.abs(a-b))
@@ -54,3 +55,11 @@ class TrafficEnv(gym.Env):
 			for x in range(len(action)):
 				self.perturbed["capacity"][x]=int(750*action[x])+250
 		return self.state, reward, self.episode_ended, {}
+
+
+class InvertedTrafficEnv(gym.Env):
+
+	def __init__(self,config: EnvContext):
+		self.edges=config["edges"]
+		self.initial_demand=config["initial_demand"]
+		self.current_demand=self.initial_demand.copy()

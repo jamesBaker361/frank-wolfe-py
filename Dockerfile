@@ -26,6 +26,7 @@ RUN python3 -m pip install numpy \
 	scipy \
 	networkx \
 	OpenMatrix \
+	decorator \
 	pandas \
 	networkx \
 	pytest \
@@ -35,7 +36,8 @@ RUN python3 -m pip install numpy \
 	setuptools \
 	tune \
 	ray[rllib] \
-	tensorflow
+	tensorflow \
+	tensorboard
 
 
 SHELL ["/bin/bash", "-c"]
