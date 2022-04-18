@@ -18,6 +18,9 @@ class TrafficEnv(gym.Env):
 		self.real_flow=config["real_flow"] #[f0,f1,f2...]
 		self.edges_count=len(self.state)
 
+		self.fw_iterations=config["fw_iterations"]
+		self.reg_beta=config["reg_beta"]
+
 		self.episode_ended = False
 		self.step_count=0
 		self.horizon=config['horizon']
@@ -46,14 +49,16 @@ class TrafficEnv(gym.Env):
 
 		self.state=assign.runPython(100)'''
 		atp=fw.AssignTrafficPython()
-		self.state=np.cast["float32"](atp.flow(self.demand,self.perturbed,100)["flow"])
+		self.state=np.cast["float32"](atp.flow(self.demand,self.perturbed,self.fw_iterations)["flow"])
 		diff=[]
 		for a,b in zip(self.real_flow,self.state):
 			diff.append(np.abs(a-b))
-		reward=-np.linalg.norm(diff)
 		if self.episode_ended is False:
 			for x in range(len(action)):
-				self.perturbed["capacity"][x]=int(750*action[x])+250
+				self.perturbed["capacity"][x]=int(1000*action[x])+50
+		#beta=0.1 #coefficient on regularization term
+		reg=self.reg_beta*np.linalg.norm(self.perturbed["capacity"])
+		reward=-(np.linalg.norm(diff)+reg)
 		return self.state, reward, self.episode_ended, {}
 
 
