@@ -21,6 +21,8 @@ class TrafficEnv(gym.Env):
 		self.fw_iterations=config["fw_iterations"]
 		self.reg_beta=config["reg_beta"]
 
+		#self.edge_parameters=config["edge_param"] #speed, capacity or length
+
 		self.episode_ended = False
 		self.step_count=0
 		self.horizon=config['horizon']
@@ -58,6 +60,44 @@ class TrafficEnv(gym.Env):
 				self.perturbed["capacity"][x]=int(1000*action[x])+50
 		#beta=0.1 #coefficient on regularization term
 		reg=self.reg_beta*np.linalg.norm(self.perturbed["capacity"])
+		reward=-(np.linalg.norm(diff)+reg)
+		return self.state, reward, self.episode_ended, {}
+
+
+class TrafficEnvSpeed(TrafficEnv):
+	"""Example of a custom env in for traffic, but the speed limit is optimized"""
+
+	def step(self, action):
+		self.step_count+=1
+		self.episode_ended = self.step_count >= self.horizon
+		atp=fw.AssignTrafficPython()
+		self.state=np.cast["float32"](atp.flow(self.demand,self.perturbed,self.fw_iterations)["flow"])
+		diff=[]
+		for a,b in zip(self.real_flow,self.state):
+			diff.append(np.abs(a-b))
+		if self.episode_ended is False:
+			for x in range(len(action)):
+				self.perturbed["speed"][x]=int(99*action[x])+1
+		#beta=0.1 #coefficient on regularization term
+		reg=self.reg_beta*np.linalg.norm(self.perturbed["capacity"])
+		reward=-(np.linalg.norm(diff)+reg)
+		return self.state, reward, self.episode_ended, {}
+
+class TrafficEnvLength(TrafficEnv):
+	"""Example of a custom env in for traffic, but the link length"""
+	def step(self, action):
+		self.step_count+=1
+		self.episode_ended = self.step_count >= self.horizon
+		atp=fw.AssignTrafficPython()
+		self.state=np.cast["float32"](atp.flow(self.demand,self.perturbed,self.fw_iterations)["flow"])
+		diff=[]
+		for a,b in zip(self.real_flow,self.state):
+			diff.append(np.abs(a-b))
+		if self.episode_ended is False:
+			for x in range(len(action)):
+				self.perturbed["speed"][x]=int(30*action[x])+1
+		#beta=0.1 #coefficient on regularization term
+		reg=self.reg_beta*np.linalg.norm(self.perturbed["length"])
 		reward=-(np.linalg.norm(diff)+reg)
 		return self.state, reward, self.episode_ended, {}
 
