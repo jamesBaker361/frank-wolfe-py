@@ -45,6 +45,7 @@ SHELL ["/bin/bash", "-c"]
 #RUN git clone https://github.com/StanfordASL/frank-wolfe-traffic.git
 COPY frank-wolfe-traffic frank-wolfe-traffic
 COPY traffic_gym traffic_gym
+COPY scratch scratch
 WORKDIR frank-wolfe-traffic/External
 
 RUN git clone https://github.com/RoutingKit/RoutingKit.git
@@ -76,5 +77,6 @@ RUN g++ -o frankwolfe$(python3-config --extension-suffix) -std=c++17 -fopenmp -W
 
 ENV PYTHONPATH=/frank-wolfe-traffic/:${PYTHONPATH}
 ENV PATH=/frank-wolfe-traffic/Build/Devel/Launchers/:${PATH}
+ENV SCRATCH=/scratch
 
 RUN cd .. && cd traffic_gym && pip install -e .
